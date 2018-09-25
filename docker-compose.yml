@@ -7,31 +7,23 @@ services:
     restart: always
     cap_add:
       - NET_ADMIN
+    env_file:
+    - env_files/common_envs.env
+    - env_files/letsencrypt.env
     volumes:
       - /home/maxoumask/dev/media-server/volumes/letsencrypt/config:/config
     ports:
       - 80:80
       - 443:443
-    environment:
-      - PGID=1000
-      - PUID=1000
-      - TZ="Europe/Paris"
-      - EMAIL=hello@maxoumask.com
-      - URL=maxoumask.com
-      - SUBDOMAINS=jackett,deluge,radarr,tautulli,plex,sonarr,ombi,elk
-      - ONLY_SUBDOMAINS=true
-      - VALIDATION=http
-      - STAGING=true
+
 
   jackett:
     image: linuxserver/jackett
     container_name: jackett
     hostname: jackett
     restart: on-failure
-    environment:
-    - PGID=1000
-    - PUID=1000
-    - TZ="Europe/Paris"
+    env_file:
+      - env_files/common_envs.env
     ports:
       - 9117:9117
     volumes:
@@ -43,10 +35,15 @@ services:
     container_name: deluge
     hostname: deluge
     restart: on-failure
+    networks:
+      - 
     network_mode: host
+    env_file:
+      - env_files/common_envs.env
+      - env_files/deluge.env
     volumes:
-      - "${VOLUME_DIR}/media:/downloads"
-      - "${VOLUME_DELUGE}/config:/config"
+      - "/home/maxoumask/dev/media-server/volumes/media:/downloads"
+      - "/home/maxoumask/dev/media-server/volumes/deluge/config:/config"
 
 #  plex:
 #    depends_on:
