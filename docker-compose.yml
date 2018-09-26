@@ -35,9 +35,7 @@ services:
     container_name: deluge
     hostname: deluge
     restart: on-failure
-    networks:
-      - 
-    network_mode: host
+#    network_mode: host
     env_file:
       - env_files/common_envs.env
       - env_files/deluge.env
