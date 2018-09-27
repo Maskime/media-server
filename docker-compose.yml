@@ -16,7 +16,6 @@ services:
       - 80:80
       - 443:443
 
-
   jackett:
     image: linuxserver/jackett
     container_name: jackett
@@ -31,7 +30,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   deluge:
-    image: linuxserver/deluge:136
+    image: linuxserver/deluge:136 #upper version of the image are broken at the moment
     container_name: deluge
     hostname: deluge
     restart: on-failure
@@ -44,8 +43,24 @@ services:
       - "58946:58946"
       - "58946:58946/udp"
     volumes:
-      - "/home/maxoumask/dev/media-server/volumes/media:/downloads"
+      - "/home/maxoumask/dev/media-server/volumes/media/downloads:/downloads"
       - "/home/maxoumask/dev/media-server/volumes/deluge/config:/config"
+
+  sonarr:
+    image: linuxserver/sonarr
+    container_name: sonarr
+    hostname: sonarr
+    restart: on-failure
+    env_file:
+      - env_files/common_envs.env
+    ports:
+      - 8989:8989
+    volumes:
+    - "/home/maxoumask/dev/media-server/volumes/sonarr/config:/config"
+    - "/home/maxoumask/dev/media-server/volumes/media/tv:/tv"
+    - "/home/maxoumask/dev/media-server/volumes/media/downloads:/downloads"
+    - /etc/localtime:/etc/localtime:ro
+
 
 #  plex:
 #    depends_on:
