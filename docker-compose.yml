@@ -31,14 +31,18 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   deluge:
-    image: linuxserver/deluge
+    image: linuxserver/deluge:136
     container_name: deluge
     hostname: deluge
     restart: on-failure
-#    network_mode: host
     env_file:
       - env_files/common_envs.env
       - env_files/deluge.env
+    ports:
+      - "8112:8112"
+      - "58846:58846"
+      - "58946:58946"
+      - "58946:58946/udp"
     volumes:
       - "/home/maxoumask/dev/media-server/volumes/media:/downloads"
       - "/home/maxoumask/dev/media-server/volumes/deluge/config:/config"
