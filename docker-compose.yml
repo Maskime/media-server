@@ -61,6 +61,20 @@ services:
     - "/home/maxoumask/dev/media-server/volumes/media/downloads:/downloads"
     - /etc/localtime:/etc/localtime:ro
 
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    hostname: radarr
+    restart: on-failure
+    env_file:
+      - env_files/common_envs.env
+    ports:
+      - 7878:7878
+    volumes:
+      - "/home/maxoumask/dev/media-server/volumes/radarr/config:/config"
+      - "/home/maxoumask/dev/media-server/volumes/media/downloads:/downloads"
+      - "/home/maxoumask/dev/media-server/volumes/media/movies:/movies"
+      - /etc/localtime:/etc/localtime:ro
 
 #  plex:
 #    depends_on:
