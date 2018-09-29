@@ -76,55 +76,25 @@ services:
       - "/home/maxoumask/dev/media-server/volumes/media/movies:/movies"
       - /etc/localtime:/etc/localtime:ro
 
-#  plex:
-#    depends_on:
-#      - deluge
-#    image: linuxserver/plex
-#    container_name: plex
-#    hostname: 'plex'
-#    restart: on-failure
-#    network_mode: host
-#    volumes:
-#      - "${VOLUME_PLEX}/database:/config"
-#      - "${VOLUME_PLEX}/transcode:/transcode"
-#      - "${VOLUME_DIR}/media/completed:/data"
-#
-#
+  plex:
+    image: linuxserver/plex
+    container_name: plex
+    hostname: radarr
+    restart: on-failure
+    env_file:
+      - env_files/common_envs.env
+      - env_files/plex.env
+    ports:
+      - "32400:32400"
+      - "32400:32400/udp"
+      - "32469:32469"
+      - "32469:32469/udp"
+      - "5354:5353/udp"
+      - "1901:1900/udp"
+    volumes:
+      - "/home/maxoumask/dev/media-server/volumes/plex/config:/config"
+      - "/home/maxoumask/dev/media-server/volumes/media/tv:/data/tvshows"
+      - "/home/maxoumask/dev/media-server/volumes/media/movies:/data/movies"
+      - "/home/maxoumask/dev/media-server/volumes/plex/transcode:/transcode"
 
-#
-#  couchpotato:
-#    depends_on:
-#      - deluge
-#    image: linuxserver/couchpotato
-#    container_name: couchpotato
-#    hostname: couchpotato
-#    restart: on-failure
-#    environment:
-#      - PUID=${MS_PUID}
-#      - PGID=${MS_PGID}
-#      - TZ=${MS_TZ}
-#    ports:
-#      - 5050:5050
-#    volumes:
-#      - "${VOLUME_DIR}/media/completed/movies:/downloads"
-#      - "${VOLUME_COUCHPOTATO}/config:/config"
-#      - "${VOLUME_COUCHPOTATO}/movies:/movies"
 
-#  sonarr:
-#    depends_on:
-#      - jackett
-#    image: linuxserver/sonarr
-#    hostname: sonarr
-#    container_name: sonarr
-#    restart: on-failure
-#    environment:
-#      - PUID=${MS_PUID}
-#      - PGID=${MS_PGID}
-#      - TZ=${MS_TZ}
-#    ports:
-#      - 8989:8989
-#    volumes:
-#      - /etc/localtime:/etc/localtime:ro
-#      - "${VOLUME_SONARR}/sonarr/config:/config"
-#      - "${VOLUME_DIR}/media/completed/tv:/tv"
-#      - "${VOLUME_DIR}/media/completed:/downloads"
