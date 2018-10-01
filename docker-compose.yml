@@ -8,10 +8,10 @@ services:
     cap_add:
       - NET_ADMIN
     env_file:
-    - env_files/common_envs.env
-    - env_files/letsencrypt.env
+      - env_files/common_envs.env
+      - env_files/letsencrypt.env
     volumes:
-      - /home/maxoumask/dev/media-server/volumes/letsencrypt/config:/config
+      - ${VOLUME_DIR}/letsencrypt/config:/config
     ports:
       - 80:80
       - 443:443
@@ -26,7 +26,7 @@ services:
     ports:
       - 9117:9117
     volumes:
-      - "/home/maxoumask/dev/media-server/volumes/jackett/config:/config"
+      - "${VOLUME_DIR}/jackett/config:/config"
       - /etc/localtime:/etc/localtime:ro
 
   deluge:
@@ -36,15 +36,14 @@ services:
     restart: on-failure
     env_file:
       - env_files/common_envs.env
-      - env_files/deluge.env
     ports:
       - "8112:8112"
       - "58846:58846"
       - "58946:58946"
       - "58946:58946/udp"
     volumes:
-      - "/home/maxoumask/dev/media-server/volumes/media/downloads:/downloads"
-      - "/home/maxoumask/dev/media-server/volumes/deluge/config:/config"
+      - "${VOLUME_DIR}/media/downloads:/downloads"
+      - "${VOLUME_DIR}/deluge/config:/config"
 
   sonarr:
     image: linuxserver/sonarr
@@ -56,9 +55,9 @@ services:
     ports:
       - 8989:8989
     volumes:
-    - "/home/maxoumask/dev/media-server/volumes/sonarr/config:/config"
-    - "/home/maxoumask/dev/media-server/volumes/media/tv:/tv"
-    - "/home/maxoumask/dev/media-server/volumes/media/downloads:/downloads"
+    - "${VOLUME_DIR}/sonarr/config:/config"
+    - "${VOLUME_DIR}/media/tv:/tv"
+    - "${VOLUME_DIR}/media/downloads:/downloads"
     - /etc/localtime:/etc/localtime:ro
 
   radarr:
@@ -71,15 +70,15 @@ services:
     ports:
       - 7878:7878
     volumes:
-      - "/home/maxoumask/dev/media-server/volumes/radarr/config:/config"
-      - "/home/maxoumask/dev/media-server/volumes/media/downloads:/downloads"
-      - "/home/maxoumask/dev/media-server/volumes/media/movies:/movies"
+      - "${VOLUME_DIR}/radarr/config:/config"
+      - "${VOLUME_DIR}/media/downloads:/downloads"
+      - "${VOLUME_DIR}/media/movies:/movies"
       - /etc/localtime:/etc/localtime:ro
 
   plex:
     image: linuxserver/plex
     container_name: plex
-    hostname: radarr
+    hostname: plex
     restart: on-failure
     env_file:
       - env_files/common_envs.env
@@ -92,9 +91,31 @@ services:
       - "5354:5353/udp"
       - "1901:1900/udp"
     volumes:
-      - "/home/maxoumask/dev/media-server/volumes/plex/config:/config"
-      - "/home/maxoumask/dev/media-server/volumes/media/tv:/data/tvshows"
-      - "/home/maxoumask/dev/media-server/volumes/media/movies:/data/movies"
-      - "/home/maxoumask/dev/media-server/volumes/plex/transcode:/transcode"
+      - "${VOLUME_DIR}/plex/config:/config"
+      - "${VOLUME_DIR}/media/tv:/data/tvshows"
+      - "${VOLUME_DIR}/media/movies:/data/movies"
+      - "${VOLUME_DIR}/plex/transcode:/transcode"
 
+  ombi:
+    image: linuxserver/ombi
+    container_name: ombi
+    hostname: ombi
+    restart: on-failure
+    env_file:
+      - env_files/common_envs.env
+    ports:
+      - "3579:3579"
+    volumes:
+      - "${VOLUME_DIR}/ombi/config:/config"
 
+  tautulli:
+    image: linuxserver/tautulli
+    container_name: tautulli
+    hostname: tautulli
+    env_file:
+      - env_files/common_envs.env
+    ports:
+      - 8181:8181
+    volumes:
+    - "${VOLUME_DIR}/tautulli/config:/config"
+    - "${VOLUME_DIR}/plex/config/Library/Application Support/Plex Media Server/Logs:/logs:ro"
