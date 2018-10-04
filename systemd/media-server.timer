@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh images and update containers
+Requires=media-server.service
+After=media-server.service
+
+[Timer]
+OnCalendar=*:0/15
+
+[Install]
+WantedBy=timers.target

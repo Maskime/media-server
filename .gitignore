@@ -1,2 +1,16 @@
 .idea/
 .env
+volumes/*
+!volumes/deluge/config/.gitkeep
+!volumes/jackett/config/.gitkeep
+!volumes/letsencrypt/config/.gitkeep
+!volumes/ombi/config/.gitkeep
+!volumes/plex/config/.gitkeep
+!volumes/plex/transcode/.gitkeep
+!volumes/radarr/config/.gitkeep
+!volumes/sonarr/config/.gitkeep
+!volumes/tautulli/config/.gitkeep
+
+!volumes/media/downloads/.gitkeep
+!volumes/media/movies/.gitkeep
+!volumes/media/tv/.gitkeep

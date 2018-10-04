@@ -1,10 +1,19 @@
-version: '3'
+version: '3.7'
+x-logging:
+  &default-logging
+  options:
+    max-size: '200k'
+    max-file: '5'
+  driver: json-file
+
 services:
+
   letsencrypt:
     image: linuxserver/letsencrypt
     container_name: letsencrypt
     hostname: letsencrypt
     restart: always
+    logging: *default-logging
     cap_add:
       - NET_ADMIN
     env_file:
@@ -21,6 +30,7 @@ services:
     container_name: jackett
     hostname: jackett
     restart: on-failure
+    logging: *default-logging
     env_file:
       - env_files/common_envs.env
     ports:
@@ -34,6 +44,7 @@ services:
     container_name: deluge
     hostname: deluge
     restart: on-failure
+    logging: *default-logging
     env_file:
       - env_files/common_envs.env
     ports:
@@ -50,6 +61,7 @@ services:
     container_name: sonarr
     hostname: sonarr
     restart: on-failure
+    logging: *default-logging
     env_file:
       - env_files/common_envs.env
     ports:
@@ -65,6 +77,7 @@ services:
     container_name: radarr
     hostname: radarr
     restart: on-failure
+    logging: *default-logging
     env_file:
       - env_files/common_envs.env
     ports:
@@ -80,6 +93,7 @@ services:
     container_name: plex
     hostname: plex
     restart: on-failure
+    logging: *default-logging
     env_file:
       - env_files/common_envs.env
       - env_files/plex.env
@@ -101,6 +115,7 @@ services:
     container_name: ombi
     hostname: ombi
     restart: on-failure
+    logging: *default-logging
     env_file:
       - env_files/common_envs.env
     ports:
@@ -112,6 +127,8 @@ services:
     image: linuxserver/tautulli
     container_name: tautulli
     hostname: tautulli
+    restart: on-failure
+    logging: *default-logging
     env_file:
       - env_files/common_envs.env
     ports:
