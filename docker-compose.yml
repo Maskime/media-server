@@ -40,7 +40,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   deluge:
-    image: linuxserver/deluge:136 #upper version of the image are broken at the moment
+    build:
+      context: ./deluge
+    image: maxoumask/deluge:latest
     container_name: deluge
     hostname: deluge
     restart: on-failure
@@ -55,6 +57,7 @@ services:
     volumes:
       - "${VOLUME_DIR}/media/downloads:/downloads"
       - "${VOLUME_DIR}/deluge/config:/config"
+      - "${VOLUME_DIR}/deluge/scripts:/scripts"
 
   sonarr:
     image: linuxserver/sonarr
