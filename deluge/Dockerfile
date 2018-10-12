@@ -4,8 +4,10 @@ FROM linuxserver/deluge:136
 
 RUN mkdir /scripts
 
-COPY scripts/extract_archive.py /scripts/extract_archive.py
+COPY scripts/extract.py /scripts/extract.py
 RUN chown -R abc:users /scripts
-RUN chmod +x /scripts/extract_archive.py
+RUN chmod +x /scripts/extract.py
 
-VOLUME /scripts
+RUN ls -la /scripts
+
+#VOLUME /scripts
