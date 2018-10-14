@@ -1,6 +1,8 @@
 .idea/
 .env
 *.pid
+*.log
+runs.db
 
 volumes/deluge/config/*
 !volumes/deluge/config/.gitkeep

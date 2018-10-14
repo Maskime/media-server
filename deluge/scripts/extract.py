@@ -112,55 +112,99 @@ class FileLock(object):
         return False
 
 
-logger = logging.getLogger('extract_archive')
-logger.setLevel(logging.DEBUG)
+def logger_create(log_tag, log_file):
+    new_logger = logging.getLogger(log_tag)
+    new_logger.setLevel(logging.DEBUG)
 
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
 
-file_handler = logging.FileHandler(filename='/config/extract_archive.log')
-console_handler.setLevel(logging.DEBUG)
+    file_handler = logging.FileHandler(filename=log_file)
+    console_handler.setLevel(logging.DEBUG)
 
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-console_handler.setFormatter(formatter)
-file_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-logger.addHandler(file_handler)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
+    new_logger.addHandler(console_handler)
+    new_logger.addHandler(file_handler)
+    return new_logger
+
+
+logger = logger_create('extract_archive', 'extract_archive.log')
 
 if not os.path.exists('runs.db') or not os.path.isfile('runs.db'):
     with open('runs.db', 'w+') as db:
         db.write('[]')
-db = FileLock('runs.db')
 
 
-def can_extract(filename, types):
+def extract_zip(filepath, extract_log):
+    """
+    Execute the zip command extraction
+    :param extract_log: logger to use for the extraction
+    :param filepath: file to extract
+    """
+    logger.debug('Extracting ZIP')
+    try:
+        result = subprocess.check_output(['unzip', '-u', filepath], stderr=subprocess.STDOUT)
+        extract_log.info(result)
+        return True
+    except Exception as error:
+        logger.error('An error occurred when extracting zip', error)
+        extract_log.error('An error occurred when extracting zip', error)
+        return False
+
+
+def extract_rar(filepath, extract_log):
+    """
+    Execute the rar command extraction
+    :param extract_log: logger to use for this extraction
+    :param filepath: file to extract
+    :return:
+    """
+    logger.debug('Extracting RAR')
+    try:
+        result = subprocess.check_output(['unrar', '-o-', 'e', filepath], stderr=subprocess.STDOUT)
+        extract_log.info(result)
+        return True
+    except Exception as error:
+        logger.error('An error occurred when extracting rar', error)
+        extract_log.error('An error occurred when extracting rar', error)
+        return False
+
+
+archive_types = ['.zip', '.rar']
+extractors = {
+    '.zip': extract_zip,
+    '.rar': extract_rar
+}
+
+
+def is_extensionwithin(filename, types):
+    """
+    Check if the filename has an extension that within the list
+    :param filename: filename to check
+    :param types: list of extenstions
+    :return: True if filename has an extension within the list False otherwise
+    """
     return get_extension(filename) in types
 
 
 def get_extension(filename):
+    """
+    Get the extension associated to the filename
+    :param filename: filename from which we'd like to find the extension for
+    :return: filename extension
+    """
     filename, file_ext = os.path.splitext(filename)
     return file_ext
 
 
-def extract_zip(filepath):
-    logger.debug('Extracting ZIP')
-    try:
-        result = subprocess.check_output(['unzip', '-u', filepath], stderr=subprocess.STDOUT)
-        logger.info(result)
-    except OSError as error:
-        logger.error('An error occurred when extracting zip', error)
-
-
-def extract_rar(filepath):
-    logger.debug('Extracting RAR')
-    try:
-        result = subprocess.check_output(['unrar', '-o-', 'e', filepath], stderr=subprocess.STDOUT)
-        logger.info(result)
-    except OSError as error:
-        logger.error('An error occurred when extracting rar', error)
-
-
 def check_pid(pid_to_check):
+    """
+    Check if the PID is valid (ie: is in list of current process)
+    :param pid_to_check: pid to check
+    :return: True if it's in the list, False otherwise
+    """
     try:
         os.kill(pid_to_check, 0)
         return True
@@ -168,22 +212,45 @@ def check_pid(pid_to_check):
         return False
 
 
-def runfile_getcontent():
-    with db:
+def runfile_getcontent(has_lock=False):
+    """
+    Get the content of the runfile db
+    :return: Content of the runfile db
+    """
+    if has_lock:
         with open('runs.db', 'r') as db_file:
             runs = json.load(db_file)
+    else:
+        with FileLock('runs.db'):
+            with open('runs.db', 'r') as db_file:
+                runs = json.load(db_file)
+
     return runs
 
 
-def runfile_writecontent(runs):
-    with db:
+def runfile_writecontent(runs, has_lock=False):
+    """
+    Rewrite the content of the runfile db file
+    :param runs: object to serialize to the file
+    """
+    if has_lock:
         with open('runs.db', 'w+') as db_file:
             json.dump(runs, db_file)
+    else:
+        with FileLock('runs.db'):
+            with open('runs.db', 'w+') as db_file:
+                json.dump(runs, db_file)
 
 
 def runfile_add(torrent_id, torrent_name, save_path):
-    with db:
-        runs = runfile_getcontent()
+    """
+    Add an element to the runfile db
+    :param torrent_id: torrent id
+    :param torrent_name: torrent name
+    :param save_path: save path
+    """
+    with FileLock('runs.db'):
+        runs = runfile_getcontent(has_lock=True)
         runs.append({
             'torrent_id': torrent_id,
             'torrent_name': torrent_name,
@@ -191,12 +258,87 @@ def runfile_add(torrent_id, torrent_name, save_path):
             'state': 'queued',
             'timestamp': time.time()
         })
-        runfile_writecontent(runs)
+        runfile_writecontent(runs, has_lock=True)
+
 
 def runfile_hasnext():
-    with db:
+    """
+    Check if the runfile is empty
+    :return: True if the runfile has other elements, False otherwise
+    """
+    with FileLock('runs.db'):
+        db_content = runfile_getcontent(has_lock=True)
+        return len(db_content) > 0
+
+
+def runfile_getnext():
+    """
+    Get the next element in the runfile db
+    :return: next element
+    """
+    with FileLock('runs.db'):
+        entry_next = runfile_getcontent(has_lock=True)[0]
+        return entry_next['torrent_id'], entry_next['torrent_name'], entry_next['save_path']
+
+
+def failedfile_handle(archive, failed_filepath):
+    """
+    Handles failed files
+    :param archive: archive that has failed
+    :param failed_filepath: the failed marker file
+    """
+    with open(failed_filepath, 'r') as fail_file:
+        fail_data = json.load(fail_file)
+    max_try = 3
+    time_between_try = 120.0
+    should_extract = True
+    if fail_data['count'] >= max_try:
+        should_extract = False
+        logger.info(
+            'Will not try to extract file [{}] as we already tried [{}] times and it failed every time'.format(archive,
+                                                                                                               max_try))
+    elif (time.time() - fail_data['last_try']) < time_between_try:
+        should_extract = False
+        logger.info('Will not try to extract file [{}] as last attempt was less than [{}] seconds ago'.format(archive,
+                                                                                                              time_between_try))
+    if should_extract:
+        start_extract(archive)
+    else:
+        logger.info(
+            'If you changed something and would like to retry, delete the file [{}] and the script will re-try'.format(
+                failed_filepath))
+
+
+def failedfile_update(archive_path):
+    """
+    Create/update failed file for the given archive
+    :param archive_path: archive which we should create the failed file for
+    """
+    filepath, ext = os.path.splitext(archive_path)
+    fail_filepath = filepath + ".failed"
+    if os.path.exists(fail_filepath) and os.path.isfile(fail_filepath):
+        with open(fail_filepath, 'r') as fail_file:
+            fail_data = json.load(fail_file)
+    else:
+        fail_data = {
+            'count': 0,
+            'last_try': 0
+        }
+    fail_data['count'] += 1
+    fail_data['last_try'] = time.time()
+    with open(fail_filepath, 'w+') as fail_file:
+        json.dump(fail_data, fail_file)
+
 
 def watchdog(torrent_id, torrent_name, save_path):
+    """
+    Check if there already is an instance of the extractor running.
+    If there is one, will add the sent parameters to the runfile db so that the current instance will pick-it up
+    for extraction and will stop the new instance.
+    :param torrent_id: torrent id
+    :param torrent_name: torrent name
+    :param save_path: save path
+    """
     pid_name = 'extract.pid'
     if os.path.exists(pid_name):
         with open(pid_name, 'r') as pid_file:
@@ -211,24 +353,47 @@ def watchdog(torrent_id, torrent_name, save_path):
 
 
 def get_marker(filename):
+    """
+    Get the marker file type
+    :param filename: marker file name
+    :return: will return ['in_progress' | 'done' | 'failed']
+    """
     return get_extension(filename).replace('.', '')
 
 
 def get_markers(marked_file):
+    """
+    Look in the marked_file directory to see if it finds any markers file.
+    :param marked_file: File that should have been marked
+    :return: a dictionary with the found markers by type.
+    """
     dir_archive = os.path.dirname(marked_file)
     return {get_marker(f): f for marker_file in os.listdir(dir_archive) if
-            get_extension(marker_file) in ['.in_progress', '.done', '.failed']}
+            is_extensionwithin(marker_file, ['.in_progress', '.done', '.failed'])}
 
 
 def start_extract(archive_path):
-    return None
+    """
+    Starts the extraction process for the given file
+    :param archive_path: archive to extract
+    :return:
+    """
+    filename = os.path.basename(archive_path)
+    log_dir = os.path.dirname(archive_path)
+    tag, file_ext = os.path.splitext(filename)
+    log_file = os.path.join(log_dir, tag + ".in_progress")
+    logger_extract = logger_create(log_tag=tag, log_file=log_file)
+    try:
+        result = extractors[file_ext](archive_path, logger_extract)
+        if result:
+            done_file = log_file.replace('.in_progress', '.done')
+            os.rename(log_file, done_file)
+        else:
+            failedfile_update(archive_path)
+    except Exception as ex:
+        logger.error('An exception occurred when on extraction', ex)
+        failedfile_update(archive_path)
 
-
-archive_types = ['.zip', '.rar']
-extractors = {
-    '.zip': extract_zip,
-    '.rar': extract_rar
-}
 
 if len(sys.argv) < 4:
     logger.error('Invalid parameters [%s]', sys.argv)
@@ -246,27 +411,9 @@ while runfile_hasnext():
     logger.debug('Checking extract necessity 1:[%s] 2:[%s] 3:[%s]', torrent_id, torrent_name, save_path)
 
     os.chdir(save_path)
-    """
-    Avant toutes choses, il faut mettre un marker pour le watchdog
-    Donc, le save_path va en fait contenir le dossier dans lequel, le torrent a ete telecharge
-    soit la racine de tous les telechargements.
-    Il faut donc en fait parcourir ce dossier et ces enfants a la recherche d'une archive
-    Si on trouve une archive, il faut :
-        0. verifier l'existence d'un marker:
-            Si marker == en cours, alors ne rien faire
-            Si marker == fait, alors ne rien faire
-            Si marker == failed, 
-                verifier le nombre de tentative qui a ete faite
-                    si < 3, alors retenter l'extration
-                    sinon, mettre a jour le marker en incrementant le nb tentative
-        1. mettre un marker pour dire qu'on est en train de le traiter
-        2. faire l'extraction
-            Si extraction OK, alors renommer le marker pour dire que l'extraction a ete faite
-            Sinon, renommer le marker pour dire que l'extraction a echouee
-    """
     to_extract = []
     for root, dirs, files in os.walk('.'):
-        archives = [f for f in files if can_extract(f, archive_types)]
+        archives = [f for f in files if is_extensionwithin(f, archive_types)]
         logger.debug('[{}][{}]'.format(root, archives))
         if len(archives) > 0:
             path_archives = [join(root, p) for p in archives]
@@ -282,8 +429,8 @@ while runfile_hasnext():
             start_extract(archive)
         else:
             if 'failed' in markers:
-                handle_failedfile(archive, markers['failed'])
+                failedfile_handle(archive, markers['failed'])
             elif 'in_progress' in markers:
-                logger.info('There is already an extraction for this archive [{}]'.format(archive))
+                logger.info('There is already an extraction in progress for this archive [{}]'.format(archive))
 
 sys.exit(0)
