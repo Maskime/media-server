@@ -130,10 +130,16 @@ def logger_create(log_tag, log_file):
     return new_logger
 
 
+def db_filepath():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'runs.db')
+
+
 logger = logger_create('extract_archive', 'extract_archive.log')
 
-if not os.path.exists('runs.db') or not os.path.isfile('runs.db'):
-    with open('runs.db', 'w+') as db:
+db_file = db_filepath()
+
+if not os.path.exists(db_file) or not os.path.isfile(db_file):
+    with open(db_file, 'w+') as db:
         db.write('[]')
 
 
@@ -162,14 +168,19 @@ def extract_rar(filepath, extract_log):
     :return:
     """
     logger.debug('Extracting RAR')
+    old_pwd = os.getcwd()
     try:
-        result = subprocess.check_output(['unrar', '-o-', 'e', filepath], stderr=subprocess.STDOUT)
+        os.chdir(os.path.dirname(filepath))
+        current_archive = os.path.basename(filepath)
+        result = subprocess.check_output(['unrar', '-o-', 'e', current_archive], stderr=subprocess.STDOUT)
         extract_log.info(result)
         return True
-    except Exception as error:
-        logger.error('An error occurred when extracting rar', error)
-        extract_log.error('An error occurred when extracting rar', error)
+    except subprocess.CalledProcessError as error:
+        logger.error("An error occurred when extracting rar : {}\n{}".format(error.message, error.output))
+        extract_log.error("An error occurred when extracting rar : {}\n{}".format(error.message, error.output))
         return False
+    finally:
+        os.chdir(old_pwd)
 
 
 archive_types = ['.zip', '.rar']
@@ -218,11 +229,11 @@ def runfile_getcontent(has_lock=False):
     :return: Content of the runfile db
     """
     if has_lock:
-        with open('runs.db', 'r') as db_file:
+        with open(db_filepath(), 'r') as db_file:
             runs = json.load(db_file)
     else:
-        with FileLock('runs.db'):
-            with open('runs.db', 'r') as db_file:
+        with FileLock(db_filepath()):
+            with open(db_filepath(), 'r') as db_file:
                 runs = json.load(db_file)
 
     return runs
@@ -234,11 +245,11 @@ def runfile_writecontent(runs, has_lock=False):
     :param runs: object to serialize to the file
     """
     if has_lock:
-        with open('runs.db', 'w+') as db_file:
+        with open(db_filepath(), 'w+') as db_file:
             json.dump(runs, db_file)
     else:
-        with FileLock('runs.db'):
-            with open('runs.db', 'w+') as db_file:
+        with FileLock(db_filepath()):
+            with open(db_filepath(), 'w+') as db_file:
                 json.dump(runs, db_file)
 
 
@@ -249,7 +260,7 @@ def runfile_add(torrent_id, torrent_name, save_path):
     :param torrent_name: torrent name
     :param save_path: save path
     """
-    with FileLock('runs.db'):
+    with FileLock(db_filepath()):
         runs = runfile_getcontent(has_lock=True)
         runs.append({
             'torrent_id': torrent_id,
@@ -266,7 +277,7 @@ def runfile_hasnext():
     Check if the runfile is empty
     :return: True if the runfile has other elements, False otherwise
     """
-    with FileLock('runs.db'):
+    with FileLock(db_filepath()):
         db_content = runfile_getcontent(has_lock=True)
         return len(db_content) > 0
 
@@ -276,17 +287,31 @@ def runfile_getnext():
     Get the next element in the runfile db
     :return: next element
     """
-    with FileLock('runs.db'):
+    with FileLock(db_filepath()):
         entry_next = runfile_getcontent(has_lock=True)[0]
         return entry_next['torrent_id'], entry_next['torrent_name'], entry_next['save_path']
 
 
-def failedfile_handle(archive, failed_filepath):
+def runfile_remove(torrent_id):
+    with FileLock(db_filepath()):
+        db_content = runfile_getcontent(True)
+        to_remove = -1
+        for index, row in enumerate(db_content):
+            if row['torrent_id'] == torrent_id:
+                to_remove = index
+                break
+        if to_remove > -1:
+            del db_content[to_remove]
+        runfile_writecontent(db_content, has_lock=True)
+
+
+def failedfile_handle(archive, failed_filename):
     """
     Handles failed files
     :param archive: archive that has failed
-    :param failed_filepath: the failed marker file
+    :param failed_filename: the failed marker file
     """
+    failed_filepath = os.path.join(os.path.dirname(archive), failed_filename)
     with open(failed_filepath, 'r') as fail_file:
         fail_data = json.load(fail_file)
     max_try = 3
@@ -302,11 +327,12 @@ def failedfile_handle(archive, failed_filepath):
         logger.info('Will not try to extract file [{}] as last attempt was less than [{}] seconds ago'.format(archive,
                                                                                                               time_between_try))
     if should_extract:
-        start_extract(archive)
+        if start_extract(archive):
+            os.remove(failed_filepath)
     else:
         logger.info(
             'If you changed something and would like to retry, delete the file [{}] and the script will re-try'.format(
-                failed_filepath))
+                failed_filename))
 
 
 def failedfile_update(archive_path):
@@ -368,7 +394,7 @@ def get_markers(marked_file):
     :return: a dictionary with the found markers by type.
     """
     dir_archive = os.path.dirname(marked_file)
-    return {get_marker(f): f for marker_file in os.listdir(dir_archive) if
+    return {get_marker(marker_file): marker_file for marker_file in os.listdir(dir_archive) if
             is_extensionwithin(marker_file, ['.in_progress', '.done', '.failed'])}
 
 
@@ -388,11 +414,13 @@ def start_extract(archive_path):
         if result:
             done_file = log_file.replace('.in_progress', '.done')
             os.rename(log_file, done_file)
+            return True
         else:
             failedfile_update(archive_path)
     except Exception as ex:
         logger.error('An exception occurred when on extraction', ex)
         failedfile_update(archive_path)
+    return False
 
 
 if len(sys.argv) < 4:
@@ -432,5 +460,8 @@ while runfile_hasnext():
                 failedfile_handle(archive, markers['failed'])
             elif 'in_progress' in markers:
                 logger.info('There is already an extraction in progress for this archive [{}]'.format(archive))
+            else:
+                logger.error('Unknown marker type [{}] when extracting [{}]'.format(markers.keys(), archive))
+    runfile_remove(torrent_id)
 
 sys.exit(0)
