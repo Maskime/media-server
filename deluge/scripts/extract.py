@@ -4,7 +4,6 @@ from __future__ import print_function
 import json
 import logging
 import subprocess
-from os.path import join
 
 import os
 import sys
@@ -112,6 +111,9 @@ class FileLock(object):
         return False
 
 
+script_filesroot = '/config'
+
+
 def logger_create(log_tag, log_file):
     new_logger = logging.getLogger(log_tag)
     new_logger.setLevel(logging.DEBUG)
@@ -131,10 +133,10 @@ def logger_create(log_tag, log_file):
 
 
 def db_filepath():
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'runs.db')
+    return os.path.join(script_filesroot, 'extract_runs.db')
 
 
-logger = logger_create('extract_archive', 'extract_archive.log')
+logger = logger_create('extract_archive', os.path.join(script_filesroot, 'extract_archive.log'))
 
 db_file = db_filepath()
 
@@ -183,9 +185,12 @@ def extract_rar(filepath, extract_log):
         os.chdir(old_pwd)
 
 
-archive_types = ['.zip', '.rar']
+# Zip is disabled at the moment, because I strugle to find test cases and I have other stuff to do.
+archive_types = [
+    # '.zip',
+    '.rar']
 extractors = {
-    '.zip': extract_zip,
+    # '.zip': extract_zip,
     '.rar': extract_rar
 }
 
@@ -365,7 +370,7 @@ def watchdog(torrent_id, torrent_name, save_path):
     :param torrent_name: torrent name
     :param save_path: save path
     """
-    pid_name = 'extract.pid'
+    pid_name = os.path.join(script_filesroot, 'extract.pid')
     if os.path.exists(pid_name):
         with open(pid_name, 'r') as pid_file:
             pid = int(pid_file.read().replace('\n', ''))
@@ -395,7 +400,7 @@ def get_markers(marked_file):
     """
     dir_archive = os.path.dirname(marked_file)
     return {get_marker(marker_file): marker_file for marker_file in os.listdir(dir_archive) if
-            is_extensionwithin(marker_file, ['.in_progress', '.done', '.failed'])}
+            is_extensionwithin(marker_file, ['.in_progress', '.done', '.failed', '.completed'])}
 
 
 def start_extract(archive_path):
@@ -423,6 +428,8 @@ def start_extract(archive_path):
     return False
 
 
+logger.debug("Current working directory : [{}]".format(os.getcwd()))
+
 if len(sys.argv) < 4:
     logger.error('Invalid parameters [%s]', sys.argv)
     sys.exit(1)
@@ -444,7 +451,7 @@ while runfile_hasnext():
         archives = [f for f in files if is_extensionwithin(f, archive_types)]
         logger.debug('[{}][{}]'.format(root, archives))
         if len(archives) > 0:
-            path_archives = [join(root, p) for p in archives]
+            path_archives = [os.path.join(root, p) for p in archives]
             to_extract = to_extract + path_archives
     if len(to_extract) == 0:
         logger.info('No archive to extract')
@@ -453,15 +460,16 @@ while runfile_hasnext():
     logger.info("Will extract [{}]".format(to_extract))
     for archive in to_extract:
         markers = get_markers(archive)
-        if len(markers) == 0:
+        if 'failed' in markers:
+            failedfile_handle(archive, markers['failed'])
+        elif 'in_progress' in markers:
+            logger.info('There is already an extraction in progress for this archive [{}]'.format(archive))
+        elif 'done' in markers:
+            logger.info('File [{}] as already been extracted'.format(archive))
+        elif 'completed':
             start_extract(archive)
         else:
-            if 'failed' in markers:
-                failedfile_handle(archive, markers['failed'])
-            elif 'in_progress' in markers:
-                logger.info('There is already an extraction in progress for this archive [{}]'.format(archive))
-            else:
-                logger.error('Unknown marker type [{}] when extracting [{}]'.format(markers.keys(), archive))
+            logger.error('No markers that I can handle, found: [{}] when extracting [{}]'.format(markers.keys(), archive))
     runfile_remove(torrent_id)
 
 sys.exit(0)
