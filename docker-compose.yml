@@ -55,8 +55,9 @@ services:
       - "58946:58946"
       - "58946:58946/udp"
     volumes:
-      - "${VOLUME_DIR}/media/downloads:/downloads"
+      - "${VOLUME_DIR}/media/downloads:/downloads/complete"
       - "${VOLUME_DIR}/deluge/config:/config"
+      - "${VOLUME_DIR}/deluge/scripts:/scripts"
 
   sonarr:
     image: linuxserver/sonarr

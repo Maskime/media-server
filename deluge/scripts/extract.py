@@ -111,7 +111,7 @@ class FileLock(object):
         return False
 
 
-script_filesroot = '/config'
+script_filesroot = os.path.dirname(__file__)
 
 
 def logger_create(log_tag, log_file):
@@ -400,7 +400,7 @@ def get_markers(marked_file):
     """
     dir_archive = os.path.dirname(marked_file)
     return {get_marker(marker_file): marker_file for marker_file in os.listdir(dir_archive) if
-            is_extensionwithin(marker_file, ['.in_progress', '.done', '.failed', '.completed'])}
+            is_extensionwithin(marker_file, ['.in_progress', '.done', '.failed'])}
 
 
 def start_extract(archive_path):
@@ -455,7 +455,8 @@ while runfile_hasnext():
             to_extract = to_extract + path_archives
     if len(to_extract) == 0:
         logger.info('No archive to extract')
-        sys.exit(0)
+        runfile_remove(torrent_id)
+        continue
 
     logger.info("Will extract [{}]".format(to_extract))
     for archive in to_extract:
@@ -466,10 +467,8 @@ while runfile_hasnext():
             logger.info('There is already an extraction in progress for this archive [{}]'.format(archive))
         elif 'done' in markers:
             logger.info('File [{}] as already been extracted'.format(archive))
-        elif 'completed':
-            start_extract(archive)
         else:
-            logger.error('No markers that I can handle, found: [{}] when extracting [{}]'.format(markers.keys(), archive))
+            start_extract(archive)
     runfile_remove(torrent_id)
 
 sys.exit(0)
