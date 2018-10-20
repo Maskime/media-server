@@ -40,9 +40,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   deluge:
-    build:
-      context: ./deluge
-    image: maxoumask/deluge:latest
+    image: linuxserver/deluge:136
     container_name: deluge
     hostname: deluge
     restart: on-failure
@@ -55,9 +53,8 @@ services:
       - "58946:58946"
       - "58946:58946/udp"
     volumes:
-      - "${VOLUME_DIR}/media/downloads:/downloads/complete"
+      - "${VOLUME_DIR}/media/downloads:/downloads"
       - "${VOLUME_DIR}/deluge/config:/config"
-      - "${VOLUME_DIR}/deluge/scripts:/scripts"
 
   sonarr:
     image: linuxserver/sonarr

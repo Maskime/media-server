@@ -176,6 +176,7 @@ def extract_rar(filepath, extract_log):
         current_archive = os.path.basename(filepath)
         result = subprocess.check_output(['unrar', '-o-', 'e', current_archive], stderr=subprocess.STDOUT)
         extract_log.info(result)
+        logger.info("Done extracting [{}]".format(current_archive))
         return True
     except subprocess.CalledProcessError as error:
         logger.error("An error occurred when extracting rar : {}\n{}".format(error.message, error.output))
