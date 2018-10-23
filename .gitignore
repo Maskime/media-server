@@ -4,6 +4,8 @@
 *.log
 runs.db
 
+__init__.py
+
 volumes/deluge/config/*
 !volumes/deluge/config/.gitkeep
 
@@ -23,6 +25,8 @@ volumes/sonarr/config/*
 !volumes/sonarr/config/.gitkeep
 volumes/tautulli/config/*
 !volumes/tautulli/config/.gitkeep
+volumes/portainer/*
+!volumes/portainer/.gitkeep
 
 volumes/media/downloads/*
 !volumes/media/downloads/.gitkeep
