@@ -1,0 +1,20 @@
+[Unit]
+Description=Docker Compose media-server server-tools
+After=docker.service network-online.target
+Requires=docker.service network-online.target
+
+[Service]
+WorkingDirectory=/opt/media-server
+Type=oneshot
+RemainAfterExit=yes
+
+ExecStartPre=-/usr/local/bin/docker-compose -f server-tools/docker-compose.yml pull --quiet
+ExecStart=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml up -d
+
+ExecStop=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml down
+
+ExecReload=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml pull --quiet
+ExecReload=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml up -d
+
+[Install]
+WantedBy=multi-user.target

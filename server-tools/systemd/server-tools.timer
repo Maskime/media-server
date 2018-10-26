@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh images and update containers
+Requires=server-tools.service
+After=server-tools.service
+
+[Timer]
+OnCalendar=*:0/15
+
+[Install]
+WantedBy=timers.target

@@ -1,20 +1,20 @@
 [Unit]
-Description=Docker Compose media-server container starter
-After=docker.service network-online.target
-Requires=docker.service network-online.target
+Description=Docker Compose media-server container entertainment starter
+After=server-tools.service network-online.target
+Requires=server-tools.service docker.service network-online.target
 
 [Service]
 WorkingDirectory=/opt/media-server
 Type=oneshot
 RemainAfterExit=yes
 
-ExecStartPre=-/usr/local/bin/docker-compose pull --quiet
-ExecStart=/usr/local/bin/docker-compose up -d
+ExecStartPre=-/usr/local/bin/docker-compose -f entertainment/docker-compose.yml pull --quiet
+ExecStart=/usr/local/bin/docker-compose -f entertainment/docker-compose.yml up -d
 
-ExecStop=/usr/local/bin/docker-compose down
+ExecStop=/usr/local/bin/docker-compose -f entertainment/docker-compose.yml down
 
-ExecReload=/usr/local/bin/docker-compose pull --quiet
-ExecReload=/usr/local/bin/docker-compose up -d
+ExecReload=/usr/local/bin/docker-compose -f entertainment/docker-compose.yml pull --quiet
+ExecReload=/usr/local/bin/docker-compose -f entertainment/docker-compose.yml up -d
 
 [Install]
 WantedBy=multi-user.target
