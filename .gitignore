@@ -34,3 +34,4 @@ volumes/media/movies/*
 !volumes/media/movies/.gitkeep
 volumes/media/tv/*
 !volumes/media/tv/.gitkeep
+*.iml
