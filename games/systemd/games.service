@@ -8,13 +8,13 @@ WorkingDirectory=/opt/home-is
 Type=oneshot
 RemainAfterExit=yes
 
-ExecStartPre=-/usr/local/bin/docker-compose -f server-tools/docker-compose.yml pull --quiet
-ExecStart=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml up -d
+ExecStartPre=-/usr/local/bin/docker-compose -f games/docker-compose.yml pull --quiet
+ExecStart=/usr/local/bin/docker-compose -f games/docker-compose.yml up -d
 
-ExecStop=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml down
+ExecStop=/usr/local/bin/docker-compose -f games/docker-compose.yml down
 
-ExecReload=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml pull --quiet
-ExecReload=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml up -d
+ExecReload=/usr/local/bin/docker-compose -f games/docker-compose.yml pull --quiet
+ExecReload=/usr/local/bin/docker-compose -f games/docker-compose.yml up -d
 
 [Install]
 WantedBy=multi-user.target
