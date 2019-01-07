@@ -9,15 +9,15 @@ x-logging:
 services:
   minecraft:
     image: itzg/minecraft-server
-      container_name: minecraft
-      hostname: minecraft
-      restart: always
-      logging: *default-logging
-      networks:
-      - server-tools_media-server-net
-      ports:
-      - 25565:25565
-      env_file:
-      - ${ENVFILES_DIR}/minecraft.env
-      tty: true
-      stdin_open: true
+    container_name: minecraft
+    hostname: minecraft
+    restart: always
+    logging: *default-logging
+    networks:
+    - server-tools_media-server-net
+    ports:
+    - 25565:25565
+    env_file:
+    - ${ENVFILES_DIR}/minecraft.env
+    tty: true
+    stdin_open: true
