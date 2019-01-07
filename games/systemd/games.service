@@ -1,7 +1,7 @@
 [Unit]
 Description=Docker Compose media-server server-tools
-After=docker.service network-online.target
-Requires=docker.service network-online.target
+After=server-tools.service docker.service network-online.target
+Requires=server-tools.service docker.service network-online.target
 
 [Service]
 WorkingDirectory=/opt/home-is
