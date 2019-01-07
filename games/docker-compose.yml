@@ -15,10 +15,12 @@ services:
     logging: *default-logging
     networks:
     - server-tools_media-server-net
-    ports:
-    - 25565:25565
     env_file:
     - ${ENVFILES_DIR}/minecraft.env
+    ports:
+    - 25565:25565
+    volumes:
+    - "${VOLUME_DIR}/minecraft:/data"
     tty: true
     stdin_open: true
 networks:
