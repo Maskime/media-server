@@ -21,3 +21,6 @@ services:
     - ${ENVFILES_DIR}/minecraft.env
     tty: true
     stdin_open: true
+networks:
+  server-tools_media-server-net:
+    external: true
