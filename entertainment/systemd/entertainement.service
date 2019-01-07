@@ -4,7 +4,7 @@ After=server-tools.service network-online.target
 Requires=server-tools.service docker.service network-online.target
 
 [Service]
-WorkingDirectory=/opt/media-server
+WorkingDirectory=/opt/home-is
 Type=oneshot
 RemainAfterExit=yes
 
