@@ -24,9 +24,7 @@ This media server has the following components for you to enjoy :
 |[Sonarr](https://sonarr.tv/)|[linuxserver/sonarr](https://hub.docker.com/r/linuxserver/sonarr/)|Search for TV Series|
 |[Radarr](https://radarr.video/)|[linuxserver/radarr](https://hub.docker.com/r/linuxserver/radarr/)|Search for Movies|
 |[Letsencrypt](https://letsencrypt.org/)|[linuxserver/letsencrypt][0]|Reverse proxy (with Nginx) with SSL enabled|
-|[Tautulli](https://tautulli.com/)|[linuxserver/tautulli](https://hub.docker.com/r/linuxserver/tautulli/)|Get stats about your Plex Media Server usage|
 |[Deluge](https://torrent-deluge.org)|[linuxserver/deluge](https://hub.docker.com/r/linuxserver/deluge/)|Torrent downloader (not for me for a friend)|
-|[Ombi](https://ombi.io/)|[linuxserver/ombi](https://hub.docker.com/r/linuxserver/ombi/)|Take request from other people about what they'd like to find on your PMS|
 |[Jackett](https://github.com/Jackett/Jackett)|[linuxserver/jackett](https://hub.docker.com/r/linuxserver/jackett/)|Unified search interface|
 |Some Systemd Scripts|[Gist Link][2]|Some systemd unit files for a nice _fire and forget_ way of life|
 
