@@ -98,7 +98,7 @@ docker create \
   -e VERSION=latest \
   -e PUID=<UID> -e PGID=<GID> \
   -e TZ=<timezone> \
-  -v </path/to/volumes>/plex:/config \
+  -v </path/to/volumes>/plex/config:/config \
   -v </path/to/volumes>/plex:/transcode \
   linuxserver/plex
 ```
@@ -106,7 +106,7 @@ The important part is related to the `--net=host` parameter. This way the contai
 actually using the host network. This way the container effectively runs on the same subnet as our.
 
 You can now connect to your plex instance :
-  1. Open browser to http://localhost:32400/
+  1. Open browser to http://localhost:32400/web/index.html
   1. Complete the setup
   1. If all went well, you can now stop the container
 
