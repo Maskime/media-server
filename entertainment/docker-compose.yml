@@ -9,84 +9,74 @@ x-logging:
 services:
 
   jackett:
-    image: linuxserver/jackett
+    image: lscr.io/linuxserver/jackett
     container_name: jackett
-    hostname: jackett
-    restart: on-failure
     logging: *default-logging
     networks:
     - server-tools_media-server-net
     env_file:
     - ${ENVFILES_DIR}/common_envs.env
-    ports:
-    - 9117:9117
+    environment:
+      - AUTO_UPDATE=true
     volumes:
-    - "${VOLUME_DIR}/jackett/config:/config"
-    - /etc/localtime:/etc/localtime:ro
+      - "${VOLUME_DIR}/jackett/config:/config"
+      - "${VOLUME_DIR}/media/downloads:/downloads"
+    ports:
+      - 9117:9117
+    restart: unless-stopped
 
   deluge:
-    image: linuxserver/deluge:136
+    image: lscr.io/linuxserver/deluge
     container_name: deluge
-    hostname: deluge
-    restart: on-failure
     logging: *default-logging
     networks:
     - server-tools_media-server-net
     env_file:
     - ${ENVFILES_DIR}/common_envs.env
-    ports:
-    - "8112:8112"
-    - "58846:58846"
-    - "58946:58946"
-    - "58946:58946/udp"
     volumes:
     - "${VOLUME_DIR}/media/downloads:/downloads"
     - "${VOLUME_DIR}/deluge/config:/config"
+    ports:
+      - 8112:8112
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
 
   sonarr:
-    image: linuxserver/sonarr
+    image: lscr.io/linuxserver/sonarr
     container_name: sonarr
-    hostname: sonarr
-    restart: on-failure
     logging: *default-logging
     networks:
     - server-tools_media-server-net
     env_file:
-    - ${ENVFILES_DIR}/common_envs.env
-    ports:
-    - 8989:8989
+      - ${ENVFILES_DIR}/common_envs.env
     volumes:
     - "${VOLUME_DIR}/sonarr/config:/config"
     - "${VOLUME_DIR}/media/tv:/tv"
     - "${VOLUME_DIR}/media/downloads:/downloads"
     - /etc/localtime:/etc/localtime:ro
-
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+  
   radarr:
-    image: linuxserver/radarr
+    image: lscr.io/linuxserver/radarr
     container_name: radarr
-    hostname: radarr
-    restart: on-failure
-    logging: *default-logging
-    networks:
-    - server-tools_media-server-net
     env_file:
     - ${ENVFILES_DIR}/common_envs.env
-    ports:
-    - 7878:7878
     volumes:
     - "${VOLUME_DIR}/radarr/config:/config"
     - "${VOLUME_DIR}/media/downloads:/downloads"
     - "${VOLUME_DIR}/media/movies:/movies"
     - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 7878:7878
+    restart: unless-stopped
 
   plex:
-    image: linuxserver/plex
+    image: lscr.io/linuxserver/plex
     container_name: plex
-    hostname: plex
-    restart: on-failure
-    logging: *default-logging
-    networks:
-    - server-tools_media-server-net
+    network_mode: host
     env_file:
     - ${ENVFILES_DIR}/common_envs.env
     - ${ENVFILES_DIR}/plex.env
@@ -99,9 +89,9 @@ services:
     - "1901:1900/udp"
     volumes:
     - "${VOLUME_DIR}/plex/config:/config"
-    - "${VOLUME_DIR}/media/tv:/data/tvshows"
+    - "${VOLUME_DIR}/media/tv:/data/tv"
     - "${VOLUME_DIR}/media/movies:/data/movies"
-    - "${VOLUME_DIR}/plex/transcode:/transcode"
+    restart: unless-stopped
 
 networks:
   server-tools_media-server-net:

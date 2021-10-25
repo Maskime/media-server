@@ -7,37 +7,23 @@ x-logging:
   driver: json-file
 
 services:
-  letsencrypt:
-    image: linuxserver/letsencrypt
-    container_name: letsencrypt
-    hostname: letsencrypt
-    restart: always
+  swag:
     logging: *default-logging
+    image: lscr.io/linuxserver/swag
+    container_name: swag
     networks:
     - media-server-net
     cap_add:
-    - NET_ADMIN
+      - NET_ADMIN
     env_file:
     - ${ENVFILES_DIR}/common_envs.env
     - ${ENVFILES_DIR}/letsencrypt.env
     volumes:
-    - ${VOLUME_DIR}/letsencrypt/config:/config
+      - ${VOLUME_DIR}/letsencrypt/config:/config
     ports:
-    - 80:80
-    - 443:443
-
-  #  watchtower:
-  #    image: v2tec/watchtower
-  #    container_name: watchtower
-  #    restart: unless-stopped
-  #    logging: *default-logging
-  #    environment:
-  #      - TZ=${TZ}
-  #    network_mode: "bridge"
-  #    volumes:
-  #      - '/var/run/docker.sock:/var/run/docker.sock'
-  #    command: --schedule @midnight --cleanup
-
+      - 443:443
+      - 80:80 #optional
+    restart: unless-stopped
 
   portainer:
     image: portainer/portainer:latest
