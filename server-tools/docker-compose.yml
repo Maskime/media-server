@@ -12,12 +12,12 @@ services:
     image: lscr.io/linuxserver/swag
     container_name: swag
     networks:
-    - media-server-net
+      - media-server-net
     cap_add:
       - NET_ADMIN
     env_file:
-    - ${ENVFILES_DIR}/common_envs.env
-    - ${ENVFILES_DIR}/swag.env
+      - ${ENVFILES_DIR}/common_envs.env
+      - ${ENVFILES_DIR}/swag.env
     volumes:
       - ${VOLUME_DIR}/swag/config:/config
     ports:
@@ -31,15 +31,15 @@ services:
     restart: unless-stopped
     logging: *default-logging
     networks:
-    - media-server-net
+      - media-server-net
     env_file:
-    - '${ENVFILES_DIR}/common_envs.env'
+      - '${ENVFILES_DIR}/common_envs.env'
     ports:
-    - '9000:9000'
+      - '9000:9000'
     volumes:
-    - '${VOLUME_DIR}/portainer:/data'
-    - '/var/run/docker.sock:/var/run/docker.sock'
-    - '/etc/localtime:/etc/localtime:ro'
+      - '${VOLUME_DIR}/portainer:/data'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/etc/localtime:/etc/localtime:ro'
     command: ${PORTAINERSTYLE} -H unix:///var/run/docker.sock
 
   netdata:
@@ -48,15 +48,15 @@ services:
     restart: unless-stopped
     logging: *default-logging
     networks:
-    - media-server-net
+      - media-server-net
     ports:
-    - '19999:19999'
+      - '19999:19999'
     cap_add:
-    - SYS_PTRACE
+      - SYS_PTRACE
     volumes:
-    - '/proc:/host/proc:ro'
-    - '/sys:/host/sys:ro'
-    - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/proc:/host/proc:ro'
+      - '/sys:/host/sys:ro'
+      - '/var/run/docker.sock:/var/run/docker.sock'
 networks:
   media-server-net:
     driver: bridge
