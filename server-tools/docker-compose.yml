@@ -17,9 +17,9 @@ services:
       - NET_ADMIN
     env_file:
     - ${ENVFILES_DIR}/common_envs.env
-    - ${ENVFILES_DIR}/letsencrypt.env
+    - ${ENVFILES_DIR}/swag.env
     volumes:
-      - ${VOLUME_DIR}/letsencrypt/config:/config
+      - ${VOLUME_DIR}/swag/config:/config
     ports:
       - 443:443
       - 80:80 #optional

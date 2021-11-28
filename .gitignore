@@ -11,8 +11,8 @@ volumes/deluge/config/*
 
 volumes/jackett/config/*
 !volumes/jackett/config/.gitkeep
-volumes/letsencrypt/config/*
-!volumes/letsencrypt/config/.gitkeep
+volumes/swag/config/*
+!volumes/swag/config/.gitkeep
 volumes/ombi/config/*
 !volumes/ombi/config/.gitkeep
 volumes/plex/config/*
