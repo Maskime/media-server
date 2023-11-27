@@ -25,23 +25,6 @@ services:
       - 9117:9117
     restart: unless-stopped
 
-  deluge:
-    image: lscr.io/linuxserver/deluge
-    container_name: deluge
-    logging: *default-logging
-    networks:
-    - server-tools_media-server-net
-    env_file:
-    - ${ENVFILES_DIR}/common_envs.env
-    volumes:
-    - "${VOLUME_DIR}/media/downloads:/downloads"
-    - "${VOLUME_DIR}/deluge/config:/config"
-    ports:
-      - 8112:8112
-      - 6881:6881
-      - 6881:6881/udp
-    restart: unless-stopped
-
   sonarr:
     image: lscr.io/linuxserver/sonarr
     container_name: sonarr
@@ -54,7 +37,6 @@ services:
     - "${VOLUME_DIR}/sonarr/config:/config"
     - "${VOLUME_DIR}/media/tv:/tv"
     - "${VOLUME_DIR}/media/downloads:/downloads"
-    - /etc/localtime:/etc/localtime:ro
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -62,36 +44,73 @@ services:
   radarr:
     image: lscr.io/linuxserver/radarr
     container_name: radarr
+    networks:
+    - server-tools_media-server-net
     env_file:
     - ${ENVFILES_DIR}/common_envs.env
     volumes:
     - "${VOLUME_DIR}/radarr/config:/config"
     - "${VOLUME_DIR}/media/downloads:/downloads"
     - "${VOLUME_DIR}/media/movies:/movies"
-    - /etc/localtime:/etc/localtime:ro
     ports:
       - 7878:7878
     restart: unless-stopped
 
-  plex:
-    image: lscr.io/linuxserver/plex
-    container_name: plex
-    network_mode: host
+    #  geoip-updater:
+    #    image: crazymax/geoip-updater:latest
+    #    volumes:
+    #      - "${VOLUME_DIR}/geoip:/data"
+    #    env_file:
+    #      - "${ENVFILES_DIR}/common_envs.env"
+    #      - "${ENVFILES_DIR}/geoip-updater.env"
+    #    restart: always
+
+  rtorrent:
+    image: crazymax/rtorrent-rutorrent:latest
+    container_name: rtorrent
+    networks:
+    - server-tools_media-server-net
     env_file:
-    - ${ENVFILES_DIR}/common_envs.env
-    - ${ENVFILES_DIR}/plex.env
+      - "${ENVFILES_DIR}/common_envs.env"
+      - "${ENVFILES_DIR}/rtorrent.env"
+    expose:
+      - "6881/udp"
+      - "8000"
+      - "8080"
+      - "9000"
+      - "50000"
     ports:
-    - "32400:32400"
-    - "32400:32400/udp"
-    - "32469:32469"
-    - "32469:32469/udp"
-    - "5354:5353/udp"
-    - "1901:1900/udp"
+      - target: 6881
+        published: 6881
+        protocol: udp
+      - target: 8080
+        published: 8080
+        protocol: tcp
+      - target: 9000
+        published: 9000
+        protocol: tcp
+      - target: 50000
+        published: 50000
+        protocol: tcp
     volumes:
-    - "${VOLUME_DIR}/plex/config:/config"
-    - "${VOLUME_DIR}/media/tv:/data/tv"
-    - "${VOLUME_DIR}/media/movies:/data/movies"
-    restart: unless-stopped
+      - "${VOLUME_DIR}/rtorrent:/data"
+      - "${VOLUME_DIR}/media/downloads:/downloads"
+      - "${VOLUME_DIR}/rtorrent/passwd:/passwd"
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 32000
+        hard: 40000
+    restart: always
+
+  rtorrent-logs:
+    image: bash
+    command: bash -c 'tail -f /log/*.log'
+    depends_on:
+      - rtorrent
+    volumes:
+      - "${VOLUME_DIR}/rtorrent/log:/log"
+    restart: always
 
 networks:
   server-tools_media-server-net:

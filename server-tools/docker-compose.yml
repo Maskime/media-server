@@ -43,6 +43,21 @@ services:
       - '/var/run/docker.sock:/var/run/docker.sock'
       - '/etc/localtime:/etc/localtime:ro'
 
+  flaresolverr:
+    # DockerHub mirror flaresolverr/flaresolverr:latest
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    networks:
+      - media-server-net
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=Europe/London
+    ports:
+      - "${PORT:-8191}:8191"
+    restart: unless-stopped
+
   netdata:
     image: titpetric/netdata
     container_name: netdata

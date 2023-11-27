@@ -4,17 +4,17 @@ After=server-tools.service network-online.target
 Requires=server-tools.service docker.service network-online.target
 
 [Service]
-WorkingDirectory=/opt/home-is
+WorkingDirectory=/home/maxoumask/media-server
 Type=oneshot
 RemainAfterExit=yes
 
-ExecStartPre=-/usr/local/bin/docker-compose -f entertainment/docker-compose.yml pull --quiet
-ExecStart=/usr/local/bin/docker-compose -f entertainment/docker-compose.yml up -d
+ExecStartPre=-/usr/local/bin/docker-compose --env-file=./.env -f entertainment/docker-compose.yml pull --quiet
+ExecStart=/usr/local/bin/docker-compose --env-file=./.env -f entertainment/docker-compose.yml up -d
 
-ExecStop=/usr/local/bin/docker-compose -f entertainment/docker-compose.yml down
+ExecStop=/usr/local/bin/docker-compose --env-file=./.env -f entertainment/docker-compose.yml down
 
-ExecReload=/usr/local/bin/docker-compose -f entertainment/docker-compose.yml pull --quiet
-ExecReload=/usr/local/bin/docker-compose -f entertainment/docker-compose.yml up -d
+ExecReload=/usr/local/bin/docker-compose --env-file=./.env -f entertainment/docker-compose.yml pull --quiet
+ExecReload=/usr/local/bin/docker-compose --env-file=./.env -f entertainment/docker-compose.yml up -d
 
 [Install]
 WantedBy=multi-user.target

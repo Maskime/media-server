@@ -4,17 +4,17 @@ After=docker.service network-online.target
 Requires=docker.service network-online.target
 
 [Service]
-WorkingDirectory=/opt/home-is
+WorkingDirectory=/home/maxoumask/media-server
 Type=oneshot
 RemainAfterExit=yes
 
-ExecStartPre=-/usr/local/bin/docker-compose -f server-tools/docker-compose.yml pull --quiet
-ExecStart=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml up -d
+ExecStartPre=-/usr/local/bin/docker-compose --env-file=./.env -f server-tools/docker-compose.yml pull --quiet
+ExecStart=/usr/local/bin/docker-compose --env-file=./.env -f server-tools/docker-compose.yml up -d
 
-ExecStop=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml down
+ExecStop=/usr/local/bin/docker-compose --env-file=./.env -f server-tools/docker-compose.yml down
 
-ExecReload=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml pull --quiet
-ExecReload=/usr/local/bin/docker-compose -f server-tools/docker-compose.yml up -d
+ExecReload=/usr/local/bin/docker-compose --env-file=./.env -f server-tools/docker-compose.yml pull --quiet
+ExecReload=/usr/local/bin/docker-compose --env-file=./.env -f server-tools/docker-compose.yml up -d
 
 [Install]
 WantedBy=multi-user.target
